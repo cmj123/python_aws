@@ -142,6 +142,58 @@ class ProgressPercentage(object):
                 )
                 sys.stdout.flush()
 
+# Function - reading objects and files
+def read_object_from_bucket():
+    object_key = 'readme.txt'
+    return s3_client().get_object(Bucket=BUCKET_NAME, Key = object_key)
+
+# Function - enable versioning
+def version_bucket_files():
+    s3_client().put_bucket_versioning(
+        Bucket=BUCKET_NAME,
+        VersioningConfiguration={
+            'Status':'Enabled'
+        }
+    )
+
+# Function - upload a new version
+def upload_a_new_version():
+    file_path = os.getcwd() + '/readme.txt'
+    return s3_client().upload_file(file_path, BUCKET_NAME, 'readme.txt')
+
+# Function - lifecycle policy configuration for buckets
+def put_lifecycle_policy():
+    lifecycle_policy = {
+        "Rules":[
+            {
+                "ID": "Move readme file to Glacier",
+                "Prefix": "readme",
+                "Status":"Enabled",
+                "Transitions":[
+                    {
+                        "Date":"2019-01-01T00:00:00.000Z",
+                        "StorageClass": "GLACIER"
+                    }
+                ]
+            },
+            {
+                "Status":"Enabled",
+                "Prefix":"",
+                "NoncurrentVersionTransitions":[
+                    {
+                        "NoncurrentDays":2,
+                        "StorageClass": "GLACIER"
+                    }
+                ],
+                "ID": "Move old versions to Glacier"
+            }
+        ]
+    }
+
+    s3_client().put_bucket_lifecycle_configuration(
+        Bucket = BUCKET_NAME,
+        LifecycleConfiguration = lifecycle_policy
+    )
 
 
 if __name__ == '__main__':
@@ -165,4 +217,8 @@ if __name__ == '__main__':
     ## Function - Upload a small file
     # print(upload_small_file())
     ## Function - Upload a large file
-    print(upload_large_file())
+    # print(upload_large_file())
+    # print(read_object_from_bucket())
+    # print(version_bucket_files())
+    # print(upload_a_new_version())
+    print(put_lifecycle_policy())
