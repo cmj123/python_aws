@@ -221,4 +221,4 @@ if __name__ == '__main__':
     # print(read_object_from_bucket())
     # print(version_bucket_files())
     # print(upload_a_new_version())
-    print(put_lifecycle_policy())
+    # print(put_lifecycle_policy())
