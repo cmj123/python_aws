@@ -203,7 +203,7 @@ if __name__ == '__main__':
     ## Function - create a bucket policy
     # print(create_bucket_policy())
     ## Function - list aws buckets
-    # print(list_buckets())
+    print(list_buckets())
     ## Function - Get bucket policy
     # print(get_bucket_policy())
     ## Function - get a bucket's encryption
