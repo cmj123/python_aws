@@ -9,6 +9,8 @@ from boto3.s3.transfer import TransferConfig
 
 # Define bucket name as a constant
 BUCKET_NAME = 'aws-s3-2020-bucket'
+WEBSITE_BUCKET_NAME = 'mys3esuawebsite.de'
+
 # function - create a client
 def s3_client():
     s3 = boto3.client('s3')
@@ -77,7 +79,7 @@ def update_bucket_policy(bucket_name):
                     's3:GetObject',
                     's3:PutObject'
                 ],
-                'Resource': ["arn:aws:s3:::aws-s3-2020-bucket/*"]
+                'Resource': 'arn:aws:s3:::' + bucket_name + '/*'
             }
         ]
 
@@ -195,6 +197,40 @@ def put_lifecycle_policy():
         LifecycleConfiguration = lifecycle_policy
     )
 
+# Function - Host a website on AWS
+def host_static_website():
+    # Create client with the region close to me
+    s3 = boto3.client('s3', region_name='eu-west-2')
+
+    # Create  bucket
+    s3.create_bucket(
+        Bucket = WEBSITE_BUCKET_NAME,
+        CreateBucketConfiguration = {
+            'LocationConstraint' : 'eu-west-2'
+        }
+    )
+
+    # Update policy
+    update_bucket_policy(WEBSITE_BUCKET_NAME)
+
+    # Website configuration
+    website_configuration = {
+        'ErrorDocument':{'Key':'error.html'},
+        'IndexDocument':{'Suffix': 'index.html'}
+    }
+
+    s3_client().put_bucket_website(
+        Bucket=WEBSITE_BUCKET_NAME,
+        WebsiteConfiguration=website_configuration
+    )
+
+    index_file = os.getcwd() + '/index.html'
+    error_file = os.getcwd() + '/error.html'
+
+    s3_client().put_object(Bucket=WEBSITE_BUCKET_NAME, ACL='public-read', Key='index.html',
+                           Body=open(index_file).read(), ContentType='text/html')
+    s3_client().put_object(Bucket=WEBSITE_BUCKET_NAME, ACL='public-read', Key='error.html',
+                           Body=open(error_file).read(), ContentType='text/html')
 
 if __name__ == '__main__':
     ## Function - Create a bucket
@@ -203,7 +239,7 @@ if __name__ == '__main__':
     ## Function - create a bucket policy
     # print(create_bucket_policy())
     ## Function - list aws buckets
-    print(list_buckets())
+    # print(list_buckets())
     ## Function - Get bucket policy
     # print(get_bucket_policy())
     ## Function - get a bucket's encryption
@@ -222,3 +258,4 @@ if __name__ == '__main__':
     # print(version_bucket_files())
     # print(upload_a_new_version())
     # print(put_lifecycle_policy())
+    print(host_static_website())
